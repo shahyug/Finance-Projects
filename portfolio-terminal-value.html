@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portfolio Terminal Value Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0b0d1a;
+    --bg-1: #12152a;
+    --panel: #171a33;
+    --panel-2: #1d2140;
+    --line: #2c3159;
+    --ink: #f1f3ff;
+    --muted: #9296c0;
+    --cyan: #23e0c9;
+    --violet: #a86bff;
+    --pink: #ff5fa8;
+    --amber: #ffc23c;
+    --coral: #ff6b6b;
+    --grad-hero: linear-gradient(120deg, #7c3aed 0%, #ec4899 50%, #f97316 100%);
+    --grad-band: linear-gradient(135deg, #1a1c3d 0%, #2c1a4d 55%, #3d1a4a 100%);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(900px 500px at 10% -10%, rgba(124,58,237,0.35), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(35,224,201,0.18), transparent 55%),
+      var(--bg-0);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .wrap {
+    padding: 32px 20px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .header {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .header h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin: 0 0 6px;
+    background: var(--grad-hero);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+  .header p {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 520px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-label {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .field-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field-input-wrap:focus-within {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(35,224,201,0.15);
+  }
+  .field-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 11px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    min-width: 0;
+    width: 100%;
+  }
+  .field-suffix {
+    padding-right: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .stepup-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-weight: 600;
+  }
+  .stepup-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--amber);
+    height: 4px;
+  }
+  .stepup-row .val {
+    min-width: 44px;
+    text-align: right;
+    font-weight: 800;
+    color: var(--amber);
+    font-family: 'Sora', sans-serif;
+  }
+  .section-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .events-block {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .events-block.add { border-left: 3px solid var(--cyan); }
+  .events-block.add .section-label { color: var(--cyan); }
+  .events-block.withdraw { border-left: 3px solid var(--coral); }
+  .events-block.withdraw .section-label { color: var(--coral); }
+  .events-block.swp { border-left: 3px solid var(--pink); }
+  .events-block.swp .section-label { color: var(--pink); }
+  .event-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .event-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    flex: 1;
+  }
+  .event-input-wrap.small { flex: 0 0 84px; }
+  .event-prefix, .event-suffix { font-size: 12px; color: var(--muted); padding: 0 8px; white-space: nowrap; font-weight: 600; }
+  .event-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 4px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    outline: none;
+    min-width: 0;
+    width: 100%;
+  }
+  .event-at { font-size: 12px; color: var(--muted); white-space: nowrap; font-weight: 500; }
+  .event-remove {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 15px;
+    line-height: 1;
+  }
+  .event-remove:hover { background: rgba(255,107,107,0.15); color: var(--coral); }
+  .add-event-btn {
+    font-size: 12.5px;
+    font-weight: 700;
+    background: transparent;
+    border: 1px dashed var(--line);
+    border-radius: 7px;
+    padding: 9px 10px;
+    cursor: pointer;
+    color: var(--muted);
+    width: 100%;
+    transition: all 0.15s;
+  }
+  .events-block.add .add-event-btn:hover { border-color: var(--cyan); color: var(--cyan); background: rgba(35,224,201,0.08); }
+  .events-block.withdraw .add-event-btn:hover { border-color: var(--coral); color: var(--coral); background: rgba(255,107,107,0.08); }
+  .events-block.swp .add-event-btn:hover { border-color: var(--pink); color: var(--pink); background: rgba(255,95,168,0.08); }
+  .events-empty {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .result-band {
+    background: var(--grad-band);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 26px 24px 20px;
+    color: #fdfdff;
+    margin-bottom: 22px;
+    margin-top: 22px;
+    box-shadow: 0 20px 60px -20px rgba(124,58,237,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-band::before {
+    content: "";
+    position: absolute;
+    top: -60%; right: -20%;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(35,224,201,0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .result-band .eyebrow {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--cyan);
+    margin-bottom: 8px;
+  }
+  .result-band .value {
+    font-family: 'Sora', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.8px;
+    background: linear-gradient(90deg, #ffffff, #d9d4ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .result-band .value small {
+    font-size: 17px;
+    font-weight: 500;
+    color: #b9b6d9;
+    margin-left: 8px;
+    -webkit-text-fill-color: #b9b6d9;
+  }
+  .real-value-line {
+    font-size: 13px;
+    color: var(--amber);
+    margin-top: 8px;
+    font-weight: 500;
+    position: relative;
+  }
+  .breakdown {
+    display: flex;
+    gap: 24px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .breakdown-item .label { font-size: 11px; color: #a7a4cf; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .breakdown-item .num { font-size: 17px; font-weight: 700; font-family: 'Sora', sans-serif; }
+  .breakdown-item .num.gain { color: var(--cyan); }
+  .breakdown-item .num.withdrawn { color: var(--coral); }
+  .chart-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 10px 14px;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--muted);
+    padding-left: 10px;
+    margin-bottom: 8px;
+  }
+  .legend-row {
+    display: flex;
+    gap: 16px;
+    padding-left: 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    font-weight: 600;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; }
+  .footnote {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  #chartTooltip {
+    position: absolute;
+    pointer-events: none;
+    background: #23273f;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 11.5px;
+    color: var(--ink);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    display: none;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .chart-svg-wrap { position: relative; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Portfolio Terminal Value</h1>
+    <p>Project your current holdings, SIP, planned lumpsum moves, SWP, and inflation forward to a chosen horizon.</p>
+  </div>
+
+  <div class="grid">
+    <label class="field">
+      <span class="field-label">Current portfolio value</span>
+      <div class="field-input-wrap"><input id="currentPortfolio" type="number" min="0" step="10000" value="1500000"><span class="field-suffix">₹</span></div>
+    </label>
+    <label class="field">
+      <span class="field-label">Additional lumpsum (today)</span>
+      <div class="field-input-wrap"><input id="extraLumpsum" type="number" min="0" step="10000" value="0"><span class="field-suffix">₹</span></div>
+    </label>
+    <label class="field">
+      <span class="field-label">Monthly SIP amount</span>
+      <div class="field-input-wrap"><input id="monthlySip" type="number" min="0" step="500" value="25000"><span class="field-suffix">₹/mo</span></div>
+    </label>
+    <label class="field">
+      <span class="field-label">Time horizon</span>
+      <div class="field-input-wrap"><input id="years" type="number" min="1" step="1" value="15"><span class="field-suffix">years</span></div>
+    </label>
+    <label class="field">
+      <span class="field-label">Expected annual return (CAGR)</span>
+      <div class="field-input-wrap"><input id="cagr" type="number" min="0" step="0.5" value="12"><span class="field-suffix">%</span></div>
+    </label>
+    <label class="field">
+      <span class="field-label">Annual SIP step-up (optional)</span>
+      <div class="field-input-wrap"><input id="sipStepUp" type="number" min="0" step="1" value="0"><span class="field-suffix">%/yr</span></div>
+    </label>
+  </div>
+
+  <div class="stepup-row">
+    <span>Expected inflation rate</span>
+    <input id="inflation" type="range" min="0" max="12" step="0.5" value="6">
+    <span class="val" id="inflationVal">6%</span>
+  </div>
+
+  <div class="events-block add">
+    <div class="section-label">ADD LUMPSUM DURING THE HORIZON</div>
+    <div id="additionsEmpty" class="events-empty">No planned additions. Add one below if you expect a bonus, inheritance, or windfall.</div>
+    <div id="additionsList"></div>
+    <button class="add-event-btn" id="addAdditionBtn" type="button">+ Add a lumpsum addition</button>
+  </div>
+
+  <div class="events-block withdraw">
+    <div class="section-label">WITHDRAW LUMPSUM DURING THE HORIZON</div>
+    <div id="withdrawalsEmpty" class="events-empty">No planned withdrawals. Add one below for a known future expense.</div>
+    <div id="withdrawalsList"></div>
+    <button class="add-event-btn" id="addWithdrawalBtn" type="button">+ Add a lumpsum withdrawal</button>
+  </div>
+
+  <div class="events-block swp">
+    <div class="section-label">SWP — WITHDRAW A FIXED AMOUNT EVERY MONTH</div>
+    <div id="swpEmpty" class="events-empty">No SWP set up. Add one to model a regular monthly payout, e.g. for retirement income.</div>
+    <div id="swpList"></div>
+    <button class="add-event-btn" id="addSwpBtn" type="button">+ Add an SWP</button>
+  </div>
+
+  <div class="result-band">
+    <div class="eyebrow" id="resultEyebrow">TERMINAL VALUE AFTER 15 YEARS (NOMINAL)</div>
+    <div class="value" id="resultValue">₹0<small></small></div>
+    <div class="real-value-line" id="realValueLine"></div>
+    <div class="real-value-line" id="depletionWarning" style="color:#ff6b6b; display:none;"></div>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-title">GROWTH OVER TIME — NOMINAL VS INFLATION-ADJUSTED</div>
+    <div class="legend-row">
+      <div class="legend-item"><span class="legend-dot" style="background:#23e0c9; color:#23e0c9;"></span> Nominal value</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ffc23c; color:#ffc23c;"></span> Real (inflation-adjusted)</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#7c7fa8; color:#7c7fa8;"></span> Net invested</div>
+    </div>
+    <div class="chart-svg-wrap">
+      <svg id="chartSvg" width="100%" height="240" viewBox="0 0 860 240" preserveAspectRatio="none"></svg>
+      <div id="chartTooltip"></div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    Assumes monthly compounding at the entered CAGR. Lumpsum additions and withdrawals are applied at the end of the
+    specified year. An SWP withdraws its fixed monthly amount every month starting after the chosen year and
+    continues through the end of the horizon, or until the portfolio is exhausted, whichever comes first.
+    Withdrawals can't take the portfolio below ₹0. Real value discounts the nominal terminal value by the inflation
+    rate over the full horizon. Figures are illustrative projections, not guarantees. This tool runs entirely in your
+    browser — no data is sent anywhere.
+  </p>
+</div>
+
+<script>
+(function () {
+  let uid = 0;
+  const nextId = () => 'e' + (uid++);
+
+  let additions = [];
+  let withdrawals = [];
+  let swpPlans = [];
+
+  function inr(n) {
+    return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(n));
+  }
+  function inrCompact(n) {
+    const sign = n < 0 ? '-' : '';
+    const abs = Math.abs(n);
+    if (abs >= 1e7) return sign + '₹' + (abs / 1e7).toFixed(2) + ' Cr';
+    if (abs >= 1e5) return sign + '₹' + (abs / 1e5).toFixed(2) + ' L';
+    return sign + '₹' + inr(abs);
+  }
+
+  function computeSeries(p) {
+    const r = p.cagr / 100;
+    const monthlyRate = Math.pow(1 + r, 1 / 12) - 1;
+    const totalMonths = Math.round(p.years * 12);
+
+    let value = p.currentPortfolio + p.extraLumpsum;
+    let invested = value;
+    let withdrawnCum = 0;
+    let swpWithdrawnCum = 0;
+    let currentSip = p.monthlySip;
+    let depletedAtMonth = null;
+
+    const series = [{ year: 0, value: value, invested: invested, real: value }];
+
+    const addByMonth = {};
+    p.additions.forEach(function (a) {
+      const m = Math.round(a.year * 12);
+      if (m >= 1 && m <= totalMonths && a.amount > 0) addByMonth[m] = (addByMonth[m] || 0) + a.amount;
+    });
+    const withdrawByMonth = {};
+    p.withdrawals.forEach(function (w) {
+      const m = Math.round(w.year * 12);
+      if (m >= 1 && m <= totalMonths && w.amount > 0) withdrawByMonth[m] = (withdrawByMonth[m] || 0) + w.amount;
+    });
+
+    for (let m = 1; m <= totalMonths; m++) {
+      if (p.sipStepUp > 0 && m > 1 && (m - 1) % 12 === 0) {
+        currentSip = currentSip * (1 + p.sipStepUp / 100);
+      }
+      value = value * (1 + monthlyRate);
+      value += currentSip;
+      invested += currentSip;
+
+      if (addByMonth[m]) { value += addByMonth[m]; invested += addByMonth[m]; }
+      if (withdrawByMonth[m]) {
+        const w = Math.min(withdrawByMonth[m], value);
+        value -= w;
+        withdrawnCum += w;
+      }
+
+      let swpThisMonth = 0;
+      p.swpPlans.forEach(function (plan) {
+        const startMonth = Math.round(plan.year * 12);
+        if (m >= startMonth && plan.amount > 0) swpThisMonth += plan.amount;
+      });
+      if (swpThisMonth > 0) {
+        const w = Math.min(swpThisMonth, value);
+        value -= w;
+        swpWithdrawnCum += w;
+        if (w < swpThisMonth && depletedAtMonth === null) depletedAtMonth = m;
+      }
+
+      if (m % 12 === 0) {
+        const yr = m / 12;
+        const real = value / Math.pow(1 + p.inflation / 100, yr);
+        series.push({ year: yr, value: value, invested: invested, real: real });
+      }
+    }
+
+    const final = series[series.length - 1];
+    return {
+      series: series,
+      final: final,
+      withdrawnCum: withdrawnCum,
+      swpWithdrawnCum: swpWithdrawnCum,
+      invested: final.invested,
+      depletedAtYear: depletedAtMonth ? +(depletedAtMonth / 12).toFixed(1) : null
+    };
+  }
+
+  function getInputs() {
+    return {
+      currentPortfolio: Number(document.getElementById('currentPortfolio').value) || 0,
+      extraLumpsum: Number(document.getElementById('extraLumpsum').value) || 0,
+      monthlySip: Number(document.getElementById('monthlySip').value) || 0,
+      years: Number(document.getElementById('years').value) || 1,
+      cagr: Number(document.getElementById('cagr').value) || 0,
+      sipStepUp: Number(document.getElementById('sipStepUp').value) || 0,
+      inflation: Number(document.getElementById('inflation').value) || 0,
+      additions: additions,
+      withdrawals: withdrawals,
+      swpPlans: swpPlans
+    };
+  }
+
+  function renderEventRows(containerId, emptyId, list, kind, maxYear) {
+    const container = document.getElementById(containerId);
+    const empty = document.getElementById(emptyId);
+    empty.style.display = list.length === 0 ? 'block' : 'none';
+    container.innerHTML = '';
+    list.forEach(function (item) {
+      const row = document.createElement('div');
+      row.className = 'event-row';
+
+      const amountWrap = document.createElement('div');
+      amountWrap.className = 'event-input-wrap';
+      const prefix = document.createElement('span');
+      prefix.className = 'event-prefix';
+      prefix.textContent = '₹';
+      const amountInput = document.createElement('input');
+      amountInput.type = 'number';
+      amountInput.min = '0';
+      amountInput.step = kind === 'swp' ? '1000' : '5000';
+      amountInput.value = item.amount;
+      amountInput.addEventListener('input', function () {
+        item.amount = Number(amountInput.value) || 0;
+        update();
+      });
+      amountWrap.appendChild(prefix);
+      amountWrap.appendChild(amountInput);
+      if (kind === 'swp') {
+        const suf = document.createElement('span');
+        suf.className = 'event-suffix';
+        suf.textContent = '/mo';
+        amountWrap.appendChild(suf);
+      }
+
+      const atLabel = document.createElement('span');
+      atLabel.className = 'event-at';
+      atLabel.textContent = kind === 'swp' ? 'starting after' : 'after';
+
+      const yearWrap = document.createElement('div');
+      yearWrap.className = 'event-input-wrap small';
+      const yearInput = document.createElement('input');
+      yearInput.type = 'number';
+      yearInput.min = '0';
+      yearInput.max = String(maxYear);
+      yearInput.step = '1';
+      yearInput.value = item.year;
+      yearInput.addEventListener('input', function () {
+        item.year = Number(yearInput.value) || 0;
+        update();
+      });
+      const yearSuf = document.createElement('span');
+      yearSuf.className = 'event-suffix';
+      yearSuf.textContent = 'yrs';
+      yearWrap.appendChild(yearInput);
+      yearWrap.appendChild(yearSuf);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'event-remove';
+      removeBtn.type = 'button';
+      removeBtn.textContent = '✕';
+      removeBtn.addEventListener('click', function () {
+        const idx = list.indexOf(item);
+        if (idx > -1) list.splice(idx, 1);
+        update();
+      });
+
+      row.appendChild(amountWrap);
+      row.appendChild(atLabel);
+      row.appendChild(yearWrap);
+      row.appendChild(removeBtn);
+      container.appendChild(row);
+    });
+  }
+
+  function drawChart(series) {
+    const svg = document.getElementById('chartSvg');
+    const W = 860, H = 240;
+    const padL = 60, padR = 20, padT = 10, padB = 24;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+
+    const maxVal = Math.max.apply(null, series.map(function (d) { return Math.max(d.value, d.invested, d.real); })) * 1.08 || 1;
+    const maxYear = series[series.length - 1].year || 1;
+
+    function x(yr) { return padL + (yr / maxYear) * plotW; }
+    function y(v) { return padT + plotH - (v / maxVal) * plotH; }
+
+    function pathFor(key) {
+      return series.map(function (d, i) {
+        return (i === 0 ? 'M' : 'L') + x(d.year).toFixed(1) + ',' + y(d[key]).toFixed(1);
+      }).join(' ');
+    }
+    function areaFor(key) {
+      const line = series.map(function (d, i) {
+        return (i === 0 ? 'M' : 'L') + x(d.year).toFixed(1) + ',' + y(d[key]).toFixed(1);
+      }).join(' ');
+      return line + ' L' + x(series[series.length - 1].year).toFixed(1) + ',' + y(0).toFixed(1) +
+        ' L' + x(0).toFixed(1) + ',' + y(0).toFixed(1) + ' Z';
+    }
+
+    // gridlines (horizontal, 4 divisions)
+    let gridLines = '';
+    let gridLabels = '';
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const v = (maxVal / steps) * i;
+      const yy = y(v);
+      gridLines += '<line x1="' + padL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + yy.toFixed(1) + '" stroke="#2c3159" stroke-dasharray="2 4" />';
+      gridLabels += '<text x="' + (padL - 8) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#9296c0" font-family="Inter, sans-serif">' + inrCompact(v) + '</text>';
+    }
+
+    // x axis labels (every ~2-3 years depending on span)
+    let xLabels = '';
+    const yearStep = maxYear <= 10 ? 1 : maxYear <= 20 ? 2 : 5;
+    for (let yr = 0; yr <= maxYear; yr += yearStep) {
+      xLabels += '<text x="' + x(yr).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="#9296c0" font-family="Inter, sans-serif">Y' + yr + '</text>';
+    }
+
+    svg.innerHTML =
+      '<defs>' +
+      '<linearGradient id="totalFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#23e0c9" stop-opacity="0.35"/><stop offset="100%" stop-color="#23e0c9" stop-opacity="0.02"/></linearGradient>' +
+      '<linearGradient id="realFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffc23c" stop-opacity="0.22"/><stop offset="100%" stop-color="#ffc23c" stop-opacity="0.02"/></linearGradient>' +
+      '</defs>' +
+      gridLines + gridLabels + xLabels +
+      '<path d="' + areaFor('real') + '" fill="url(#realFill)" stroke="none" />' +
+      '<path d="' + areaFor('value') + '" fill="url(#totalFill)" stroke="none" />' +
+      '<path d="' + pathFor('invested') + '" fill="none" stroke="#7c7fa8" stroke-width="1" stroke-dasharray="3 3" />' +
+      '<path d="' + pathFor('real') + '" fill="none" stroke="#ffc23c" stroke-width="2" />' +
+      '<path d="' + pathFor('value') + '" fill="none" stroke="#23e0c9" stroke-width="2.5" />';
+
+    // hover targets
+    const tooltip = document.getElementById('chartTooltip');
+    const wrap = svg.parentElement;
+    series.forEach(function (d) {
+      const cx = x(d.year), cy = y(d.value);
+      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      hit.setAttribute('cx', cx);
+      hit.setAttribute('cy', cy);
+      hit.setAttribute('r', 8);
+      hit.setAttribute('fill', 'transparent');
+      hit.style.cursor = 'pointer';
+      hit.addEventListener('mouseenter', function (e) {
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = '<b>Year ' + d.year + '</b><br/>Nominal: ' + inrCompact(d.value) +
+          '<br/>Real: ' + inrCompact(d.real) + '<br/>Invested: ' + inrCompact(d.invested);
+      });
+      hit.addEventListener('mousemove', function (e) {
+        const rect = wrap.getBoundingClientRect();
+        tooltip.style.left = (e.clientX - rect.left + 12) + 'px';
+        tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
+      });
+      hit.addEventListener('mouseleave', function () { tooltip.style.display = 'none'; });
+      svg.appendChild(hit);
+    });
+  }
+
+  function update() {
+    const inputs = getInputs();
+    document.getElementById('inflationVal').textContent = inputs.inflation + '%';
+
+    const result = computeSeries(inputs);
+    const totalWithdrawn = result.withdrawnCum + result.swpWithdrawnCum;
+    const totalGain = result.final.value + totalWithdrawn - result.invested;
+    const gainPct = result.invested > 0 ? (totalGain / result.invested) * 100 : 0;
+    const realGap = result.final.value - result.final.real;
+
+    document.getElementById('resultEyebrow').textContent =
+      'TERMINAL VALUE AFTER ' + inputs.years + (inputs.years === 1 ? ' YEAR' : ' YEARS') + ' (NOMINAL)';
+    document.getElementById('resultValue').innerHTML =
+      inrCompact(result.final.value) + '<small>₹' + inr(result.final.value) + '</small>';
+    document.getElementById('realValueLine').textContent =
+      "Inflation-adjusted (today's ₹): " + inrCompact(result.final.real) + ' — worth ' + inrCompact(realGap) +
+      ' less due to ' + inputs.inflation + '% inflation';
+
+    const depletionEl = document.getElementById('depletionWarning');
+    if (result.depletedAtYear) {
+      depletionEl.style.display = 'block';
+      depletionEl.textContent = '⚠ Portfolio runs out around year ' + result.depletedAtYear + ' at the current SWP rate — payouts can\'t be sustained beyond that.';
+    } else {
+      depletionEl.style.display = 'none';
+    }
+
+    let breakdownHtml =
+      '<div class="breakdown-item"><div class="label">Total invested (net)</div><div class="num">' + inrCompact(result.invested) + '</div></div>';
+    if (result.withdrawnCum > 0) {
+      breakdownHtml += '<div class="breakdown-item"><div class="label">Lumpsum withdrawn</div><div class="num withdrawn">' + inrCompact(result.withdrawnCum) + '</div></div>';
+    }
+    if (result.swpWithdrawnCum > 0) {
+      breakdownHtml += '<div class="breakdown-item"><div class="label">SWP withdrawn</div><div class="num withdrawn">' + inrCompact(result.swpWithdrawnCum) + '</div></div>';
+    }
+    breakdownHtml += '<div class="breakdown-item"><div class="label">Total gain</div><div class="num gain">' + inrCompact(totalGain) + ' (' + gainPct.toFixed(0) + '%)</div></div>';
+    document.getElementById('breakdown').innerHTML = breakdownHtml;
+
+    renderEventRows('additionsList', 'additionsEmpty', additions, 'add', inputs.years);
+    renderEventRows('withdrawalsList', 'withdrawalsEmpty', withdrawals, 'withdraw', inputs.years);
+    renderEventRows('swpList', 'swpEmpty', swpPlans, 'swp', inputs.years);
+
+    drawChart(result.series);
+  }
+
+  document.getElementById('addAdditionBtn').addEventListener('click', function () {
+    const years = Number(document.getElementById('years').value) || 1;
+    additions.push({ id: nextId(), amount: 100000, year: Math.min(5, years) });
+    update();
+  });
+  document.getElementById('addWithdrawalBtn').addEventListener('click', function () {
+    const years = Number(document.getElementById('years').value) || 1;
+    withdrawals.push({ id: nextId(), amount: 100000, year: Math.min(10, years) });
+    update();
+  });
+  document.getElementById('addSwpBtn').addEventListener('click', function () {
+    const years = Number(document.getElementById('years').value) || 1;
+    swpPlans.push({ id: nextId(), amount: 10000, year: Math.min(10, years) });
+    update();
+  });
+
+  ['currentPortfolio', 'extraLumpsum', 'monthlySip', 'years', 'cagr', 'sipStepUp', 'inflation'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', update);
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
